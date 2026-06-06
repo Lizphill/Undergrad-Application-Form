@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CATUC Undergraduate Application Form</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; background: #e8e8e8; color: #000; }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: #1a3a6b; color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .topbar-title { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; letter-spacing: 0.5px; }
+  .topbar-btns { display: flex; gap: 10px; }
+  .btn {
+    padding: 7px 18px; border: none; border-radius: 4px; cursor: pointer;
+    font-size: 12px; font-family: Arial, sans-serif; font-weight: bold;
+    transition: background 0.2s;
+  }
+  .btn-print  { background: #fff; color: #1a3a6b; }
+  .btn-submit { background: #f0a500; color: #000; }
+  .btn-print:hover  { background: #e0e8f8; }
+  .btn-submit:hover { background: #d09000; }
+
+  /* ── OVERLAY ── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 999;
+    align-items: center; justify-content: center;
+  }
+  .overlay.active { display: flex; }
+  .modal {
+    background: #fff; border-radius: 8px; padding: 30px 36px;
+    max-width: 420px; width: 90%; text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .modal h2 { font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 10px; color: #1a3a6b; }
+  .modal p  { font-family: Arial, sans-serif; font-size: 13px; color: #444; margin-bottom: 18px; line-height: 1.5; }
+  .modal .spinner {
+    width: 36px; height: 36px; border: 4px solid #ddd;
+    border-top-color: #1a3a6b; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .modal-success { color: #1a7a3a; font-size: 28px; margin-bottom: 10px; }
+  .modal-error   { color: #c0392b; font-size: 28px; margin-bottom: 10px; }
+  .modal .close-btn {
+    margin-top: 12px; padding: 8px 24px;
+    background: #1a3a6b; color: #fff; border: none;
+    border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+
+  /* ── PAGES ── */
+  .page {
+    width: 210mm; min-height: 297mm;
+    margin: 20px auto; background: #fff;
+    padding: 14mm 14mm; box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+    position: relative;
+  }
+
+  /* ── HEADER ── */
+  .univ-title { text-align: center; font-size: 15pt; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
+  .header-address { font-size: 9.5pt; line-height: 1.5; }
+  .passport-box {
+    border: 1px solid #000; width: 90px; height: 110px;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; font-size: 9pt; font-style: italic;
+    text-align: center; color: #444; position: relative; overflow: hidden;
+  }
+  .passport-box img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .passport-box .upload-hint { font-size: 8pt; color: #666; cursor: pointer; }
+  .passport-box input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  .form-title-row {
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 2px solid #000; border-bottom: 1px solid #000;
+    padding: 5px 0; margin-bottom: 10px;
+  }
+  .form-title { font-size: 13pt; font-weight: bold; letter-spacing: 1px; text-decoration: underline; }
+  .academic-year { display: flex; align-items: center; font-size: 10pt; border: 1px solid #000; padding: 3px 8px; gap: 6px; }
+  .academic-year input { width: 38px; border: none; border-bottom: 1px solid #000; outline: none; font-size: 10pt; text-align: center; font-family: inherit; }
+
+  .section { border: 1px solid #000; margin-bottom: 10px; padding: 8px 10px; }
+  .section-title { font-weight: bold; font-size: 11pt; margin-bottom: 6px; }
+  .section-subtitle { font-size: 9.5pt; margin-bottom: 8px; }
+
+  .field-row { display: flex; align-items: baseline; margin-bottom: 7px; gap: 6px; flex-wrap: wrap; }
+  .field-label { white-space: nowrap; font-size: 10.5pt; }
+  .field-line { flex: 1; border: none; border-bottom: 1px solid #000; outline: none; font-size: 10.5pt; font-family: inherit; min-width: 60px; background: transparent; }
+
+  .gender-row { display: flex; align-items: center; gap: 18px; margin-bottom: 7px; }
+  .check-label { display: flex; align-items: center; gap: 5px; font-size: 10.5pt; cursor: pointer; }
+  .check-label input[type=checkbox], .check-label input[type=radio] { width: 13px; height: 13px; cursor: pointer; }
+
+  .dob-row { display: flex; align-items: baseline; gap: 14px; margin-bottom: 7px; flex-wrap: wrap; }
+  .dob-field { display: flex; align-items: baseline; gap: 4px; }
+  .dob-field input { border: none; border-bottom: 1px solid #000; outline: none; font-size: 10.5pt; font-family: inherit; background: transparent; }
+
+  .place-grid { display: grid; grid-template-columns: 100px 1fr; gap: 5px 6px; margin-bottom: 7px; align-items: baseline; padding-left: 30px; }
+  .id-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
+  .addr-input { width: 100%; border: none; border-bottom: 1px solid #000; outline: none; font-size: 10.5pt; font-family: inherit; margin-bottom: 6px; background: transparent; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  .two-col .col-title { font-weight: bold; font-size: 11pt; margin-bottom: 5px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  th, td { border: 1px solid #000; padding: 4px 5px; text-align: center; }
+  th { font-weight: bold; background: #f5f5f5; }
+  td input[type=text], td input[type=number] { width: 100%; border: none; outline: none; font-size: 9.5pt; font-family: inherit; text-align: center; background: transparent; }
+
+  .objectives-table td { height: 32px; }
+  .objectives-table td:first-child { font-weight: bold; white-space: nowrap; text-align: left; padding-left: 6px; }
+  .objectives-table td:last-child input { text-align: left; }
+  .nb-box { border: 1px solid #000; padding: 8px 10px; font-size: 9.5pt; margin-top: 10px; }
+
+  .lang-yes-no { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; flex-wrap: wrap; }
+  .lang-identify { display: flex; align-items: baseline; gap: 6px; flex: 1; }
+  .fluency-table td input { text-align: center; }
+  .english-prof { margin: 10px 0 10px; font-size: 9.5pt; }
+  .english-prof .ep-title { font-weight: bold; margin-bottom: 4px; }
+
+  /* ── DOCUMENT UPLOAD ── */
+  .doc-upload-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;
+  }
+  .doc-item {
+    border: 1.5px dashed #aaa; border-radius: 4px; padding: 8px 10px;
+    font-size: 8.5pt; background: #fafafa; position: relative;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .doc-item:hover { border-color: #1a3a6b; background: #f0f4ff; }
+  .doc-item label { font-weight: bold; display: block; margin-bottom: 4px; color: #333; }
+  .doc-item input[type=file] { width: 100%; font-size: 8pt; }
+  .doc-item .file-status { font-size: 7.5pt; color: #888; margin-top: 3px; }
+  .doc-item .file-status.ok { color: #1a7a3a; font-weight: bold; }
+  .doc-note { font-size: 8.5pt; color: #555; margin-top: 6px; font-style: italic; }
+
+  .declaration-text { font-style: italic; font-size: 9pt; margin-bottom: 10px; line-height: 1.6; }
+  .decl-sig-row { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .decl-date-row { display: flex; align-items: baseline; justify-content: flex-end; margin-top: 8px; gap: 8px; }
+
+  .submit-box { border: 1px solid #000; padding: 8px 12px; font-size: 10pt; line-height: 1.7; margin-top: 10px; }
+  .submit-contact { display: flex; gap: 20px; flex-wrap: wrap; font-style: italic; font-size: 9.5pt; margin-top: 4px; }
+
+  .board-title { text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 2px; }
+  .board-subtitle { text-align: center; font-style: italic; font-size: 10pt; margin-bottom: 12px; }
+  .req-table { width: auto; margin: 0 auto 14px; min-width: 60%; }
+  .req-table th { background: #f0f0f0; }
+  .admit-reject-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .admit-box { border: 1px solid #000; flex: 0 0 160px; }
+  .obs-box { border: 1px solid #000; flex: 1; padding: 6px; min-height: 90px; }
+  .obs-box textarea { width: 100%; border: none; outline: none; resize: none; font-family: inherit; font-size: 9.5pt; height: 80px; background: transparent; }
+  .rejected-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  .rejected-table td, .rejected-table th { border: 1px solid #000; padding: 6px; }
+  .rejected-reason { height: 100px; vertical-align: top; }
+  .rejected-reason textarea { width: 100%; height: 90px; border: none; outline: none; resize: none; font-family: inherit; font-size: 9.5pt; background: transparent; }
+  .signatories-title { text-align: center; font-size: 11pt; font-weight: bold; margin-bottom: 6px; }
+  .sig-table td { height: 36px; }
+  .sig-table td input { width: 100%; border: none; outline: none; font-family: inherit; font-size: 9.5pt; background: transparent; }
+  .page-num { text-align: center; font-size: 9pt; margin-top: 12px; }
+
+  /* required highlight */
+  input:required:invalid { border-bottom-color: #e74c3c !important; }
+  .required-mark { color: #c0392b; font-size: 8pt; }
+
+  @media print {
+    body { background: #fff; }
+    .topbar { display: none; }
+    .overlay { display: none !important; }
+    .page { margin: 0; box-shadow: none; padding: 12mm 13mm; page-break-after: always; width: 100%; }
+    .page:last-child { page-break-after: auto; }
+    .doc-upload-grid { display: none; }
+    .doc-print-note { display: block !important; }
+    input, textarea { color: #000; }
+  }
+  .doc-print-note { display: none; font-size: 9pt; font-style: italic; color: #555; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">🎓 CATUC — Undergraduate Application Form</div>
+  <div class="topbar-btns">
+    <button class="btn btn-print" onclick="window.print()">🖨 Print</button>
+    <button class="btn btn-submit" onclick="submitForm()">📤 Submit Application</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal" id="modal-inner">
+    <div class="spinner" id="modal-spinner"></div>
+    <h2 id="modal-title">Submitting your application…</h2>
+    <p id="modal-msg">Please wait while your files and responses are being uploaded to the school's Google Drive. Do not close this page.</p>
+  </div>
+</div>
+
+<!-- ══════════ PAGE 1 ══════════ -->
+<div class="page">
+  <div class="univ-title">CATHOLIC UNIVERSITY OF CAMEROON (CATUC), BAMENDA</div>
+  <div class="header-top">
+    <div class="header-address">
+      P.O. Box 782 Bamenda<br>North West Region<br>Republic of Cameroon<br>
+      Tel: (237) 676-900-243<br>E-mail: info@catuc.org<br>Website: www.catuc.org
+    </div>
+    <div style="text-align:center;font-size:9pt;">
+      <div style="width:80px;height:80px;border:1px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#777;margin:0 auto 2px;">CATUC Seal</div>
+      City of Wisdom
+    </div>
+    <div class="passport-box" title="Click to upload passport photo">
+      <img id="passport-preview" src="" alt="">
+      <span class="upload-hint" id="passport-hint">Passport-Size<br><br>Photo<br><small>(click to upload)</small></span>
+      <input type="file" id="passportPhoto" name="passportPhoto" accept="image/*" onchange="previewPassport(this)">
+    </div>
+  </div>
+
+  <div class="form-title-row">
+    <div class="form-title">UNDERGRADUATE &nbsp; APPLICATION FORM</div>
+    <div class="academic-year">
+      Academic Year:
+      <input type="text" id="ay1" name="academicYearFrom" placeholder="20__" maxlength="4">
+      /
+      <input type="text" id="ay2" name="academicYearTo" placeholder="20__" maxlength="4">
+    </div>
+  </div>
+
+  <!-- Section 1 -->
+  <div class="section">
+    <div class="section-title">1. &nbsp; PERSONAL DETAILS</div>
+    <div class="section-subtitle">Please enter all information exactly as it appears in your Birth Certificate</div>
+
+    <div class="field-row">
+      <span class="field-label">Name: <span class="required-mark">*</span></span>
+      <input class="field-line" type="text" name="fullName" required>
+    </div>
+    <div class="gender-row">
+      <span class="field-label">Gender:</span>
+      <label class="check-label"><input type="radio" name="gender" value="Male"> Male</label>
+      <label class="check-label"><input type="radio" name="gender" value="Female"> Female</label>
+    </div>
+    <div class="dob-row">
+      <span class="field-label">Date of Birth:</span>
+      <div class="dob-field"><span>Day:</span><input type="text" name="dobDay" style="width:65px"></div>
+      <div class="dob-field"><span>Month:</span><input type="text" name="dobMonth" style="width:100px"></div>
+      <div class="dob-field"><span>Year:</span><input type="text" name="dobYear" style="width:65px"></div>
+    </div>
+    <div class="field-row" style="align-items:flex-start;">
+      <span class="field-label" style="padding-top:2px;">Place of Birth:</span>
+      <div style="flex:1;">
+        <div class="place-grid">
+          <span class="field-label">City/Town:</span><input class="field-line" type="text" name="pobCity">
+          <span class="field-label">Division:</span><input class="field-line" type="text" name="pobDivision">
+          <span class="field-label">Region:</span><input class="field-line" type="text" name="pobRegion">
+          <span class="field-label">Country:</span><input class="field-line" type="text" name="pobCountry">
+          <span class="field-label">Religion:</span><input class="field-line" type="text" name="religion">
+          <span class="field-label">If Catholic:</span>
+          <div style="display:flex;gap:16px;align-items:center;padding-top:2px;">
+            <label class="check-label"><input type="radio" name="baptised" value="Baptised"> Baptised</label>
+            <label class="check-label"><input type="radio" name="baptised" value="Not Baptised"> Not Baptised</label>
+          </div>
+          <span class="field-label">Nationality:</span><input class="field-line" type="text" name="nationality">
+        </div>
+      </div>
+    </div>
+    <div class="id-row">
+      <span class="field-label">National ID Card Number:</span>
+      <input class="field-line" type="text" name="nationalIdNumber" style="max-width:160px">
+      <span class="field-label">Issued on:</span>
+      <input class="field-line" type="text" name="nationalIdIssued" style="max-width:110px">
+      <span class="field-label">At:</span>
+      <input class="field-line" type="text" name="nationalIdAt" style="max-width:130px">
+    </div>
+    <div class="id-row">
+      <span class="field-label">Passport Number:</span>
+      <input class="field-line" type="text" name="passportNumber" style="max-width:150px">
+      <span class="field-label">Issued on:</span>
+      <input class="field-line" type="text" name="passportIssued" style="max-width:100px">
+      <span class="field-label">Country of Issue:</span>
+      <input class="field-line" type="text" name="passportCountry">
+    </div>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="section">
+    <div class="section-title">2. &nbsp; ADDRESSES</div>
+    <div class="field-row">
+      <span class="field-label">(Please, include Post Box number)</span>
+      <input class="field-line" type="text" name="address1">
+    </div>
+    <input class="addr-input" type="text" name="address2" placeholder="">
+    <div class="field-row">
+      <span class="field-label">Student's Phone Number(s) (Include Country Code):</span>
+      <input class="field-line" type="text" name="studentPhone">
+    </div>
+    <div class="field-row">
+      <span class="field-label">Student's Email Address: <span class="required-mark">*</span></span>
+      <input class="field-line" type="email" name="studentEmail" required>
+    </div>
+    <div class="two-col" style="margin-top:10px;">
+      <div>
+        <div class="col-title">PARENT</div>
+        <div class="field-row"><span class="field-label">Name:</span><input class="field-line" type="text" name="parentName"></div>
+        <div class="field-row"><span class="field-label">Occupation:</span><input class="field-line" type="text" name="parentOccupation"></div>
+        <div class="field-row"><span class="field-label">Address:</span><input class="field-line" type="text" name="parentAddress"></div>
+        <div style="border-bottom:1px solid #000;margin-bottom:6px;"></div>
+        <div class="field-row"><span class="field-label">Phone Number:</span><input class="field-line" type="text" name="parentPhone"></div>
+      </div>
+      <div>
+        <div class="col-title">SPONSOR:</div>
+        <div class="field-row"><span class="field-label">Name:</span><input class="field-line" type="text" name="sponsorName"></div>
+        <div class="field-row"><span class="field-label">Occupation:</span><input class="field-line" type="text" name="sponsorOccupation"></div>
+        <div class="field-row"><span class="field-label">Address:</span><input class="field-line" type="text" name="sponsorAddress"></div>
+        <div style="border-bottom:1px solid #000;margin-bottom:6px;"></div>
+        <div class="field-row"><span class="field-label">Phone Number:</span><input class="field-line" type="text" name="sponsorPhone"></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">1</div>
+</div>
+
+<!-- ══════════ PAGE 2 ══════════ -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">3. &nbsp; ACADEMIC QUALIFICATION</div>
+    <div style="font-size:9.5pt;margin-bottom:8px;line-height:1.5;">
+      List in chronological order (from Secondary school), all colleges/universities you have attended. Please,
+      provide <strong>clean</strong> photocopies of any certificates obtained from these institutions.
+    </div>
+    <div style="font-style:italic;font-size:9.5pt;margin-bottom:8px;">
+      <em>For holders of the GCE Ordinary Level and Advanced Level, indicate the number of papers obtained and the year.<br>
+      For holders of Probatoire and Baccalaureate, indicate the series obtained and the year.</em>
+    </div>
+    <table id="qualTable">
+      <thead>
+        <tr>
+          <th rowspan="2" style="width:22%">Name of Institution(s)</th>
+          <th rowspan="2" style="width:16%">Location (City/Country)</th>
+          <th rowspan="2" style="width:13%">Language of Instruction</th>
+          <th colspan="2">Dates Attended</th>
+          <th colspan="4">Certificates Obtained</th>
+        </tr>
+        <tr><th>From</th><th>To</th><th>GCE O'L</th><th>GCE A'L</th><th>PROB</th><th>BAC</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><input type="text" name="qual_inst_1"></td><td><input type="text" name="qual_loc_1"></td><td><input type="text" name="qual_lang_1"></td><td><input type="text" name="qual_from_1"></td><td><input type="text" name="qual_to_1"></td><td><input type="text" name="qual_ocel_1"></td><td><input type="text" name="qual_acel_1"></td><td><input type="text" name="qual_prob_1"></td><td><input type="text" name="qual_bac_1"></td></tr>
+        <tr><td><input type="text" name="qual_inst_2"></td><td><input type="text" name="qual_loc_2"></td><td><input type="text" name="qual_lang_2"></td><td><input type="text" name="qual_from_2"></td><td><input type="text" name="qual_to_2"></td><td><input type="text" name="qual_ocel_2"></td><td><input type="text" name="qual_acel_2"></td><td><input type="text" name="qual_prob_2"></td><td><input type="text" name="qual_bac_2"></td></tr>
+        <tr><td><input type="text" name="qual_inst_3"></td><td><input type="text" name="qual_loc_3"></td><td><input type="text" name="qual_lang_3"></td><td><input type="text" name="qual_from_3"></td><td><input type="text" name="qual_to_3"></td><td><input type="text" name="qual_ocel_3"></td><td><input type="text" name="qual_acel_3"></td><td><input type="text" name="qual_prob_3"></td><td><input type="text" name="qual_bac_3"></td></tr>
+        <tr><td><input type="text" name="qual_inst_4"></td><td><input type="text" name="qual_loc_4"></td><td><input type="text" name="qual_lang_4"></td><td><input type="text" name="qual_from_4"></td><td><input type="text" name="qual_to_4"></td><td><input type="text" name="qual_ocel_4"></td><td><input type="text" name="qual_acel_4"></td><td><input type="text" name="qual_prob_4"></td><td><input type="text" name="qual_bac_4"></td></tr>
+        <tr><td><input type="text" name="qual_inst_5"></td><td><input type="text" name="qual_loc_5"></td><td><input type="text" name="qual_lang_5"></td><td><input type="text" name="qual_from_5"></td><td><input type="text" name="qual_to_5"></td><td><input type="text" name="qual_ocel_5"></td><td><input type="text" name="qual_acel_5"></td><td><input type="text" name="qual_prob_5"></td><td><input type="text" name="qual_bac_5"></td></tr>
+        <tr><td><input type="text" name="qual_inst_6"></td><td><input type="text" name="qual_loc_6"></td><td><input type="text" name="qual_lang_6"></td><td><input type="text" name="qual_from_6"></td><td><input type="text" name="qual_to_6"></td><td><input type="text" name="qual_ocel_6"></td><td><input type="text" name="qual_acel_6"></td><td><input type="text" name="qual_prob_6"></td><td><input type="text" name="qual_bac_6"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" style="margin-top:14px;">
+    <div class="section-title">4. &nbsp; ACADEMIC OBJECTIVES</div>
+    <div class="section-subtitle" style="font-style:italic;">
+      Please indicate, in order of preference, the UNDERGRADUATE Programme you would like to study at the Catholic University of Cameroon.
+    </div>
+    <table class="objectives-table">
+      <thead>
+        <tr><th style="width:22%">Choices</th><th>UNDERGRADÚTE Programme</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>First Choice</td><td><input type="text" name="choice1"></td></tr>
+        <tr><td>Second Choice</td><td><input type="text" name="choice2"></td></tr>
+        <tr><td>Third Choice</td><td><input type="text" name="choice3"></td></tr>
+      </tbody>
+    </table>
+    <div class="nb-box">
+      <strong>(N.B)</strong> <em>The applicant's first choice will be respected as much as possible provided he/she has the prerequisite subjects for the degree programme chosen. Otherwise, they will be offered the next best choice.</em>
+    </div>
+  </div>
+  <div class="page-num">2</div>
+</div>
+
+<!-- ══════════ PAGE 3 ══════════ -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">5. &nbsp; LANGUAGES</div>
+    <div style="margin-bottom:6px;font-size:10pt;">Was English the language of instruction at the secondary/high school(s) you attended?</div>
+    <div class="lang-yes-no">
+      <label class="check-label"><input type="radio" name="englishLang" value="Yes"> Yes</label>
+      <label class="check-label"><input type="radio" name="englishLang" value="No"> No</label>
+      <div class="lang-identify">
+        <span style="font-size:10pt;">If NO, identify the language of instruction at these schools:</span>
+        <input class="field-line" type="text" name="otherLangInstruction">
+      </div>
+    </div>
+    <div style="margin-bottom:6px;font-size:10pt;">Indicate any other language(s) spoken:</div>
+    <table class="fluency-table">
+      <thead>
+        <tr>
+          <th rowspan="2" style="width:22%">Language</th>
+          <th rowspan="2" style="width:18%">Years of Study</th>
+          <th colspan="4">Fluency</th>
+        </tr>
+        <tr><th><em>Excellent</em></th><th>Good</th><th>Fair</th><th><em>Minimal</em></th></tr>
+      </thead>
+      <tbody>
+        <tr><td><input type="text" name="lang1"></td><td><input type="text" name="lang1_years"></td><td><input type="text" name="lang1_exc"></td><td><input type="text" name="lang1_good"></td><td><input type="text" name="lang1_fair"></td><td><input type="text" name="lang1_min"></td></tr>
+        <tr><td><input type="text" name="lang2"></td><td><input type="text" name="lang2_years"></td><td><input type="text" name="lang2_exc"></td><td><input type="text" name="lang2_good"></td><td><input type="text" name="lang2_fair"></td><td><input type="text" name="lang2_min"></td></tr>
+        <tr><td><input type="text" name="lang3"></td><td><input type="text" name="lang3_years"></td><td><input type="text" name="lang3_exc"></td><td><input type="text" name="lang3_good"></td><td><input type="text" name="lang3_fair"></td><td><input type="text" name="lang3_min"></td></tr>
+      </tbody>
+    </table>
+    <div class="english-prof">
+      <div class="ep-title">English Proficiency</div>
+      <div style="font-size:9.5pt;line-height:1.6;">Applicants from a non-English speaking background who have passed "A" Level Examinations or equivalent will be required to demonstrate proficiency in the English Language, by sitting and passing an English Language Test.</div>
+    </div>
+  </div>
+
+  <!-- Section 6 – Supporting Documents with upload -->
+  <div class="section">
+    <div class="section-title">6. &nbsp; SUPPORTING DOCUMENTS (Admission Requirements):</div>
+    <ol style="padding-left:18px;font-size:9.5pt;line-height:1.8;margin-bottom:10px;">
+      <li>A Receipt of Registration Fee of Fifteen thousand (15,000) francs — OPSECS, ECOBANK, UBC, UBA, NFC, or SGBC</li>
+      <li>One Clean Photocopy of Birth Certificate</li>
+      <li>One Clean Photocopy of GCE O'Level or Probaboire Certificate</li>
+      <li>One Clean Photocopy of GCE A'Level or Baccalaureate Certificate</li>
+      <li>1,000frs for Colour Passport Size Photograph (hard &amp; soft taken on campus)</li>
+      <li>Students with foreign certificates: Equivalences from MINESUP, Yaoundé (www.equivalence.cm)</li>
+    </ol>
+
+    <div class="doc-upload-grid">
+      <div class="doc-item">
+        <label>📄 Registration Fee Receipt</label>
+        <input type="file" name="doc_receipt" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen(this)">
+        <div class="file-status">No file chosen</div>
+      </div>
+      <div class="doc-item">
+        <label>📄 Birth Certificate</label>
+        <input type="file" name="doc_birth" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen(this)">
+        <div class="file-status">No file chosen</div>
+      </div>
+      <div class="doc-item">
+        <label>📄 GCE O'Level / Probaboire</label>
+        <input type="file" name="doc_olevel" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen(this)">
+        <div class="file-status">No file chosen</div>
+      </div>
+      <div class="doc-item">
+        <label>📄 GCE A'Level / Baccalaureate</label>
+        <input type="file" name="doc_alevel" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen(this)">
+        <div class="file-status">No file chosen</div>
+      </div>
+      <div class="doc-item">
+        <label>📄 Foreign Certificate Equivalence <small>(if applicable)</small></label>
+        <input type="file" name="doc_equiv" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen(this)">
+        <div class="file-status">No file chosen</div>
+      </div>
+      <div class="doc-item">
+        <label>📄 Other Supporting Document</label>
+        <input type="file" name="doc_other" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen(this)">
+        <div class="file-status">No file chosen</div>
+      </div>
+    </div>
+    <div class="doc-note">Files are uploaded securely to CATUC's Google Drive upon submission. Accepted: PDF, JPG, PNG.</div>
+    <div class="doc-print-note">Supporting documents submitted digitally via the online form.</div>
+  </div>
+
+  <!-- Section 7 -->
+  <div class="section">
+    <div class="section-title">7. &nbsp; DECLARATION</div>
+    <div class="declaration-text">
+      I certify that all the information I have given on this application form is correct and complete. I understand that withholding or providing false information or fake documents in support of this application may disqualify me from admission or later be used as grounds for my dismissal from the Catholic University of Cameroon (CATUC) Bamenda.
+    </div>
+    <div class="decl-sig-row">
+      <div class="field-row" style="flex:1;">
+        <span class="field-label">Applicant's Name:</span>
+        <input class="field-line" type="text" name="declarationName">
+      </div>
+      <div class="field-row">
+        <span class="field-label">Signature:</span>
+        <input class="field-line" type="text" name="signature" style="width:120px;" placeholder="Type full name">
+      </div>
+    </div>
+    <div class="decl-date-row">
+      <span class="field-label">Date:</span>
+      <input class="field-line" type="text" name="declarationDate" style="width:150px;" id="declDate">
+    </div>
+  </div>
+
+  <!-- Section 8 -->
+  <div class="section">
+    <div class="section-title" style="margin-bottom:4px;">8. &nbsp; Submit your complete Application File to;</div>
+    <div style="font-size:10pt;line-height:1.8;margin-bottom:6px;">
+      <strong>The Registrar</strong><br><strong>Admissions Office</strong><br>
+      Catholic University of Cameroon, (CATUC)<br>P.O. Box 782 Bamenda<br>North West Region, Cameroon
+    </div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;font-style:italic;font-size:9.5pt;margin-top:4px;">
+      <span>Contact Number 00237-676-900-243</span>
+      <span>Website www.catuc.org</span>
+      <span>Email: info@catuc.org</span>
+    </div>
+    <div style="font-style:italic;font-size:9.5pt;margin-top:2px;">This Application Form could equally be downloaded from the above website.</div>
+  </div>
+  <div class="page-num">3</div>
+</div>
+
+<!-- ══════════ PAGE 4 ══════════ -->
+<div class="page">
+  <div class="board-title">UNDERGRADUATE ADMISSION BOARD RESULTS</div>
+  <div class="board-subtitle">(For Official Use ONLY)</div>
+
+  <table class="req-table" style="margin-bottom:16px;">
+    <thead>
+      <tr><th colspan="3">Does the Candidate meet the basic requirements for admission?</th></tr>
+      <tr><th></th><th>YES</th><th>NO</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:left;padding-left:8px;">University Adminssion Requirements</td>
+        <td><label class="check-label" style="justify-content:center;"><input type="radio" name="univ_req" value="YES"> YES</label></td>
+        <td><label class="check-label" style="justify-content:center;"><input type="radio" name="univ_req" value="NO"> NO</label></td>
+      </tr>
+      <tr>
+        <td style="text-align:left;padding-left:8px;">UNDERGRADUATE Programme Requirements</td>
+        <td><label class="check-label" style="justify-content:center;"><input type="radio" name="prog_req" value="YES"> YES</label></td>
+        <td><label class="check-label" style="justify-content:center;"><input type="radio" name="prog_req" value="NO"> NO</label></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="admit-reject-row">
+    <div class="admit-box">
+      <table>
+        <thead><tr><th>Admitted</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left;padding-left:6px;font-style:italic;">First Choice:</td><td style="width:40px;"><input type="text"></td></tr>
+          <tr><td style="text-align:left;padding-left:6px;font-style:italic;">Second Choice:</td><td style="width:40px;"><input type="text"></td></tr>
+          <tr><td style="text-align:left;padding-left:6px;font-style:italic;">Third Choice:</td><td style="width:40px;"><input type="text"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="obs-box">
+      <div style="font-weight:bold;font-size:9.5pt;margin-bottom:4px;">Observation/Comment</div>
+      <textarea></textarea>
+    </div>
+  </div>
+
+  <table class="rejected-table">
+    <tbody>
+      <tr>
+        <td style="font-weight:bold;text-align:center;vertical-align:middle;">Rejected</td>
+        <td style="font-weight:bold;text-align:center;padding:4px;">Reasons for Rejection</td>
+      </tr>
+      <tr>
+        <td class="rejected-reason"></td>
+        <td class="rejected-reason"><textarea></textarea></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="signatories-title">Admission Board Signatories</div>
+  <table class="sig-table">
+    <thead>
+      <tr><th style="width:40%"><strong>NAME</strong></th><th style="width:35%"><strong>SIGNATURE</strong></th><th><strong>DATE</strong></th></tr>
+    </thead>
+    <tbody>
+      <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+      <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+      <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+      <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+      <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+    </tbody>
+  </table>
+  <div class="page-num">4</div>
+</div>
+
+<script>
+// ── CONFIG: paste your Apps Script Web App URL here after deployment ──
+const APPS_SCRIPT_URL = "https://script.google.com/a/macros/catuc.org/s/AKfycbwoZV4zZWz6YuqaAYZaTfA_V-1YPXTMPYNylSoWnb4iczkKcVxsMVfaasEeBbrHif2a/exec";
+
+// Auto-fill today's date
+document.getElementById('declDate').value = new Date().toLocaleDateString('en-GB');
+
+function previewPassport(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('passport-preview');
+      img.src = e.target.result;
+      img.style.display = 'block';
+      document.getElementById('passport-hint').style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function fileChosen(input) {
+  const status = input.parentElement.querySelector('.file-status');
+  if (input.files && input.files[0]) {
+    status.textContent = '✔ ' + input.files[0].name;
+    status.className = 'file-status ok';
+  } else {
+    status.textContent = 'No file chosen';
+    status.className = 'file-status';
+  }
+}
+
+function showModal(state, title, msg) {
+  const overlay = document.getElementById('modal');
+  const spinner = document.getElementById('modal-spinner');
+  const titleEl = document.getElementById('modal-title');
+  const msgEl   = document.getElementById('modal-msg');
+  overlay.classList.add('active');
+  spinner.style.display = state === 'loading' ? 'block' : 'none';
+  titleEl.textContent = title;
+  msgEl.innerHTML = msg;
+  if (state !== 'loading') {
+    const btn = document.createElement('button');
+    btn.className = 'close-btn';
+    btn.textContent = 'Close';
+    btn.onclick = () => overlay.classList.remove('active');
+    document.getElementById('modal-inner').appendChild(btn);
+  }
+}
+
+async function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function submitForm() {
+  const nameVal = document.querySelector('[name=fullName]').value.trim();
+  const emailVal = document.querySelector('[name=studentEmail]').value.trim();
+  if (!nameVal || !emailVal) {
+    alert('Please fill in at least the Applicant Name and Student Email before submitting.');
+    return;
+  }
+  if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    alert('⚠ Setup needed: Replace YOUR_APPS_SCRIPT_URL_HERE in the code with your Google Apps Script Web App URL.\n\nSee the CATUC_AppsScript_Setup.md file for instructions.');
+    return;
+  }
+
+  showModal('loading', 'Submitting your application…', 'Please wait while your files and responses are uploaded to CATUC\'s Google Drive. Do not close this page.');
+
+  // Collect all text fields
+  const formData = {};
+  document.querySelectorAll('input[name], textarea[name]').forEach(el => {
+    if (el.type === 'radio') { if (el.checked) formData[el.name] = el.value; }
+    else if (el.type !== 'file') { formData[el.name] = el.value; }
+  });
+
+  // Collect files as base64
+  const files = [];
+  const fileInputs = [
+    { name: 'passportPhoto',  label: 'Passport Photo' },
+    { name: 'doc_receipt',    label: 'Registration Fee Receipt' },
+    { name: 'doc_birth',      label: 'Birth Certificate' },
+    { name: 'doc_olevel',     label: "GCE O'Level / Probaboire" },
+    { name: 'doc_alevel',     label: "GCE A'Level / Baccalaureate" },
+    { name: 'doc_equiv',      label: 'Certificate Equivalence' },
+    { name: 'doc_other',      label: 'Other Document' },
+  ];
+  for (const fi of fileInputs) {
+    const input = document.querySelector(`[name=${fi.name}]`);
+    if (input && input.files && input.files[0]) {
+      const b64 = await fileToBase64(input.files[0]);
+      files.push({ name: fi.label, filename: input.files[0].name, mimeType: input.files[0].type, data: b64 });
+    }
+  }
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ formData, files }),
+    });
+    const json = await res.json();
+    if (json.status === 'ok') {
+      document.getElementById('modal-inner').innerHTML = `
+        <div class="modal-success">✅</div>
+        <h2>Application Submitted!</h2>
+        <p>Thank you, <strong>${nameVal}</strong>. Your application has been received.<br><br>
+        Your documents are stored in CATUC's Google Drive and your responses logged in Google Sheets.<br><br>
+        <em>Drive folder: <a href="${json.folderUrl}" target="_blank">View your submission folder</a></em></p>
+        <button class="close-btn" onclick="document.getElementById('modal').classList.remove('active')">Close</button>`;
+    } else {
+      throw new Error(json.message || 'Unknown error');
+    }
+  } catch (err) {
+    document.getElementById('modal-inner').innerHTML = `
+      <div class="modal-error">❌</div>
+      <h2>Submission Failed</h2>
+      <p>Something went wrong: <em>${err.message}</em><br><br>Please check your internet connection and try again, or contact the Admissions Office.</p>
+      <button class="close-btn" onclick="document.getElementById('modal').classList.remove('active')">Close</button>`;
+  }
+}
+</script>
+</body>
+</html>
